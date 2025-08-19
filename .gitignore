@@ -1,1 +1,53 @@
-**/node_modules/
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Data
+data/raw/*
+data/processed/*
+data/uploads/*
+data/predictions/*
+!data/*/.gitkeep
+
+# Models
+models/*.pkl
+models/*.joblib
+models/*.h5
+!models/.gitkeep
+
+# Logs
+logs/*.log
+logs/*.jsonl
+!logs/.gitkeep
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# ML
+mlruns/
+*.ipynb_checkpoints
+
+# Docker
+.dockerignore
