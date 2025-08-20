@@ -1,0 +1,165 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: heart-attack-prediction
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: heart-attack-api
+  namespace: heart-attack-prediction
+  labels:
+    app: heart-attack-api
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: heart-attack-api
+  template:
+    metadata:
+      labels:
+        app: heart-attack-api
+        version: v1
+    spec:
+      containers:
+      - name: api
+        image: heart-attack-api:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: url
+        - name: REDIS_URL
+          valueFrom:
+            configMapKeyRef:
+              name: redis-config
+              key: url
+        - name: API_HOST
+          value: "0.0.0.0"
+        - name: API_PORT
+          value: "8000"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/v1/health/live
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/v1/health/ready
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: model-storage
+          mountPath: /app/models
+        - name: data-storage
+          mountPath: /app/data
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: model-pvc
+      - name: data-storage
+        persistentVolumeClaim:
+          claimName: data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: heart-attack-api-service
+  namespace: heart-attack-prediction
+spec:
+  selector:
+    app: heart-attack-api
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8000
+    name: http
+  type: LoadBalancer
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: heart-attack-api-hpa
+  namespace: heart-attack-prediction
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: heart-attack-api
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: heart-attack-prediction
+data:
+  url: "redis://redis-service:6379/0"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-secret
+  namespace: heart-attack-prediction
+type: Opaque
+stringData:
+  url: "postgresql://postgres:password@postgres-service:5432/heart_attack_db"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: model-pvc
+  namespace: heart-attack-prediction
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-pvc
+  namespace: heart-attack-prediction
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: standard

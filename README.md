@@ -1,124 +1,198 @@
-# Heart Attack Risk Analysis Project
+# Heart Attack Prediction System 🏥
 
-This project provides a comprehensive analysis tool for predicting heart attack risks based on various health indicators. Utilizing a powerful backend developed with Flask, the application processes and analyzes health data, while the React-based frontend offers an intuitive interface for data input, analysis, and visualization.
+A production-ready machine learning system for predicting heart attack risk using advanced ML models and modern MLOps practices.
 
-## Features
+## 🌟 Features
 
-- **Data Input**: Allows users to input individual health data for analysis.
-- **Risk Prediction**: Utilizes machine learning models to predict heart attack risks based on input data.
-- **Data Visualization**: Offers various data visualization tools to understand risk factors better.
+- **Multiple ML Models**: Random Forest, Gradient Boosting, XGBoost, and Ensemble methods
+- **Real-time Predictions**: Fast API with sub-second response times
+- **Model Versioning**: Complete model registry with version control
+- **A/B Testing**: Compare model performances in production
+- **Data Drift Detection**: Automatic monitoring for data distribution changes
+- **Auto-scaling**: Kubernetes HPA for automatic scaling based on load
+- **Comprehensive Monitoring**: Prometheus + Grafana dashboards
+- **API Documentation**: Auto-generated OpenAPI/Swagger docs
+- **Security**: JWT authentication, API keys, and rate limiting
 
-## Getting Started
+## 🚀 Quick Start
 
-Follow these instructions to get the project up and running on your local machine for development and testing purposes.
+### Local Development
 
-### Prerequisites
+```bash
+# Clone the repository
+git clone https://github.com/malak29/heart-attack-prediction.git
+cd heart-attack-prediction
 
-- Python 3.x
-- Node.js and npm
-- Flask (for the backend)
-- React (for the frontend)
+# Install dependencies
+make install
 
-### Installation
+# Run the application
+make run
 
-1. **Clone the Repository**
+# Access the API
+curl http://localhost:8000/api/v1/health
+```
 
-    ```sh
-    git clone https://github.com/your-username/heart-attack-risk-analysis.git
-    cd heart-attack-risk-analysis
-    ```
+### Docker Deployment
 
-2. **Set Up the Backend**
+```bash
+# Build and run with Docker Compose
+make docker-run
 
-    Navigate to the backend directory and install the required Python packages:
+# Access services
+# API: http://localhost:8000
+# MLflow: http://localhost:5000
+# Grafana: http://localhost:3000 (admin/admin)
+```
 
-    ```sh
-    cd backend
-    pip install -r requirements.txt
-    ```
+### API Documentation
 
-    Start the Flask server:
+Once running, access the interactive API documentation:
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
 
-    ```sh
-    flask run
-    ```
+## 📊 API Endpoints
 
-3. **Set Up the Frontend**
+### Prediction Endpoints
+- `POST /api/v1/predict/` - Single patient prediction
+- `POST /api/v1/predict/batch` - Batch predictions
+- `POST /api/v1/predict/assess` - Detailed risk assessment
 
-    Navigate to the frontend directory and install the necessary npm packages:
+### Model Management
+- `GET /api/v1/models/` - List all models
+- `POST /api/v1/models/{version}/activate` - Activate model
+- `POST /api/v1/models/compare` - Compare models
 
-    ```sh
-    cd ../frontend
-    npm install
-    ```
+### Training
+- `POST /api/v1/train/` - Train new model
+- `POST /api/v1/train/upload-data` - Upload training data
+- `GET /api/v1/train/jobs` - List training jobs
 
-    Start the React development server:
+### Health & Monitoring
+- `GET /api/v1/health/` - Basic health check
+- `GET /api/v1/health/detailed` - Detailed system status
+- `GET /api/v1/health/metrics` - Performance metrics
 
-    ```sh
-    npm start
-    ```
+## 🏗️ Architecture
 
-### Usage
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   FastAPI   │────▶│   ML Models │────▶│  Monitoring │
+│     API     │     │   Registry  │     │  (Prometheus)│
+└─────────────┘     └─────────────┘     └─────────────┘
+       │                   │                    │
+       ▼                   ▼                    ▼
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  PostgreSQL │     │    Redis    │     │   Grafana   │
+│   Database  │     │    Cache    │     │  Dashboard  │
+└─────────────┘     └─────────────┘     └─────────────┘
+```
 
-- Use the frontend interface to input health data for analysis.
-- View risk predictions and related health insights based on the provided data.
-- Explore various data visualizations to understand the impact of different health indicators on heart attack risk.
+## 🧪 Testing
 
-## Running the Tests
+```bash
+# Run all tests
+make test
 
-### Backend Tests
+# Run with coverage
+pytest tests/ --cov=src --cov-report=html
 
-Navigate to the backend directory and execute:
+# Run specific test file
+pytest tests/test_api.py -v
 
-```sh
-python -m unittest
-Frontend Tests
-Navigate to the frontend directory and execute:
+# Run integration tests
+make test-integration
+```
 
-sh
-Copy code
-npm test
-Deployment
-Consider containerizing the application with Docker or deploying it to a cloud service like AWS, GCP, or Azure for production environments.
+## 📈 Model Training
 
-Acknowledgments
-Thanks to all open-source libraries and datasets utilized in this project.
-Special thanks to medical professionals and data scientists whose insights shaped the development of the risk prediction models.
-FAQ
-How Can I Contribute?
-Fork the repository.
-Create a new branch (git checkout -b feature/YourFeature).
-Commit your changes (git commit -m 'Add YourFeature').
-Push to the branch (git push origin feature/YourFeature).
-Open a Pull Request.
-Where to Report Issues?
-Please use the Issues section for bug reports or feature requests.
+### Using the API
 
-Is This Project Open for Research Use?
-Yes, this project is licensed under the MIT License, allowing for reuse with proper attribution. Refer to LICENSE.md for more details.
+```python
+import requests
 
-Support
-For support, contact us via email at support@example.com or join our dedicated Slack channel.
+# Upload training data
+with open('data.csv', 'rb') as f:
+    response = requests.post(
+        'http://localhost:8000/api/v1/train/upload-data',
+        files={'file': f}
+    )
 
-Project Status
-The project is in active development, with ongoing efforts to enhance the prediction models and user interface. Check the Issues section for planned features and known issues.
+# Train model
+response = requests.post(
+    'http://localhost:8000/api/v1/train/',
+    json={
+        'model_type': 'random_forest',
+        'auto_tune': True,
+        'validation_split': 0.2
+    }
+)
+```
 
-Contributing
-We welcome contributions! Please review our contributing guidelines before submitting pull requests.
+### Using CLI
 
-Code of Conduct
-We strive for a welcoming and inclusive community. Please review our Code of Conduct to ensure respectful interactions.
+```bash
+# Train with default settings
+make train
 
-License
-This project is licensed under the MIT License - see the LICENSE file for details.
+# Train with auto-tuning
+make train-auto
+```
 
-Contact
-Project Maintainer - @YourTwitterHandle - email@example.com
+## 🚢 Deployment
 
-Project Link: https://github.com/your-username/heart-attack-risk-analysis
+### Kubernetes
 
-Acknowledgements
-React Documentation
-Flask Documentation
-Axios on GitHub
-Markdown Guide
+```bash
+# Deploy to Kubernetes
+kubectl apply -f kubernetes/deployment.yaml
+
+# Check deployment status
+kubectl get pods -n heart-attack-prediction
+
+# Access logs
+kubectl logs -f deployment/heart-attack-api -n heart-attack-prediction
+```
+
+### Docker Compose
+
+```bash
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f api
+
+# Stop services
+docker-compose down
+```
+
+## 📊 Monitoring
+
+### Metrics Available
+- Request count and latency
+- Model prediction confidence
+- Data drift indicators
+- System resource usage
+- Error rates
+
+### Grafana Dashboards
+1. Navigate to http://localhost:3000
+2. Login with admin/admin
+3. Import dashboards from `monitoring/grafana/dashboards/`
+
+## 🔒 Security
+
+### Authentication
+- JWT tokens for user authentication
+- API keys for service-to-service communication
+- Rate limiting to prevent abuse
+
+### Environment Variables
+```bash
+# Copy example env file
+cp .env.example .env
+
+# Update with your values
+vim .env
+```
